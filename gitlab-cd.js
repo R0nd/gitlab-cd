@@ -4,10 +4,14 @@ const download = require("download-file");
 const execSync = require("child_process").execSync;
 const zip = require("adm-zip");
 const bodyParser = require("body-parser");
+const Pushbullet = require("pushbullet");
 const app = express();
 app.use(bodyParser.json());
 
 const config = require("./config.js");
+
+var pusher;
+if (config.pushbullet) pusher = new Pushbullet(config.pushbullet.token);
 
 app.post("/gitlab-cd", (req, res) => {
   //validate gitlab integration token
@@ -58,6 +62,20 @@ app.post("/gitlab-cd", (req, res) => {
     //start service
     console.log("starting service");
     execSync(`service ${projectConfig.serviceName} start`);
+
+    if (pusher) {
+      pusher.devices({}, (error, response) => {
+        debugger;
+        const device = response.devices.find(
+          d => d.nickname === config.pushbullet.deviceName
+        );
+        pusher.note(
+          device.iden,
+          `gitlab-cd: ${pipeline.project.name}`,
+          "Deployment complete"
+        );
+      });
+    }
   });
 });
 
