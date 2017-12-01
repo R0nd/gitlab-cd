@@ -1,6 +1,6 @@
 const express = require("express");
 const fs = require("fs");
-const download = require("download-file");
+const download = require("download");
 const execSync = require("child_process").execSync;
 const zip = require("adm-zip");
 const bodyParser = require("body-parser");
@@ -31,9 +31,11 @@ app.post("/gitlab-cd", (req, res) => {
     return;
   }
 
-  var artifactUrl = `https://gitlab.com/${pipeline.project
-    .path_with_namespace}/-/jobs/${build.id}/artifacts/download?private_token=${config
-    .tokens.private}`;
+  var artifactUrl = `https://gitlab.com/${
+    pipeline.project.path_with_namespace
+  }/-/jobs/${build.id}/artifacts/download?private_token=${
+    config.tokens.private
+  }`;
 
   var filename = `build${build.id}.zip`;
 
