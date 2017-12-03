@@ -27,7 +27,6 @@ app.post("/gitlab-cd", (req, res) => {
   var projectConfig = config.projects[pipeline.project.name];
 
   if (build.status !== "success" || !projectConfig) {
-    res.sendStatus(204);
     return;
   }
 
@@ -42,13 +41,7 @@ app.post("/gitlab-cd", (req, res) => {
   //download build artifacts
   console.log("downloading build artifacts");
   download(artifactUrl, ".", { filename: filename })
-    .catch(console.log)
     .then(() => {
-      if (err) {
-        res.sendStatus(400);
-        return;
-      }
-
       //stop service
       console.log("stopping service");
       execSync(`service ${projectConfig.serviceName} stop`);
@@ -80,6 +73,10 @@ app.post("/gitlab-cd", (req, res) => {
           );
         });
       }
+    })
+    .catch(err => {
+      console.log(error);
+      res.sendStatus(204);
     });
 });
 
