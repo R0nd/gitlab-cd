@@ -41,7 +41,7 @@ app.post("/gitlab-cd", (req, res) => {
 
   //download build artifacts
   console.log("downloading build artifacts");
-  download(artifactUrl, filename)
+  download(artifactUrl, ".", { filename: filename })
     .catch(console.log)
     .then(() => {
       if (err) {
