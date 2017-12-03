@@ -41,44 +41,46 @@ app.post("/gitlab-cd", (req, res) => {
 
   //download build artifacts
   console.log("downloading build artifacts");
-  download(artifactUrl, filename).then(() => {
-    if (err) {
-      res.sendStatus(400);
-      return;
-    }
+  download(artifactUrl, filename)
+    .catch(console.log)
+    .then(() => {
+      if (err) {
+        res.sendStatus(400);
+        return;
+      }
 
-    //stop service
-    console.log("stopping service");
-    execSync(`service ${projectConfig.serviceName} stop`);
-    //deploy build
-    console.log("deploying build");
-    new zip(filename).extractEntryTo(
-      projectConfig.artifactPath,
-      projectConfig.path,
-      false,
-      true
-    );
-    //remove artifact archive
-    console.log("removing archive");
-    fs.unlink(filename);
-    //start service
-    console.log("starting service");
-    execSync(`service ${projectConfig.serviceName} start`);
+      //stop service
+      console.log("stopping service");
+      execSync(`service ${projectConfig.serviceName} stop`);
+      //deploy build
+      console.log("deploying build");
+      new zip(filename).extractEntryTo(
+        projectConfig.artifactPath,
+        projectConfig.path,
+        false,
+        true
+      );
+      //remove artifact archive
+      console.log("removing archive");
+      fs.unlink(filename);
+      //start service
+      console.log("starting service");
+      execSync(`service ${projectConfig.serviceName} start`);
 
-    if (pusher) {
-      pusher.devices({}, (error, response) => {
-        debugger;
-        const device = response.devices.find(
-          d => d.nickname === config.pushbullet.deviceName
-        );
-        pusher.note(
-          device.iden,
-          `gitlab-cd: ${pipeline.project.name}`,
-          "Deployment complete"
-        );
-      });
-    }
-  });
+      if (pusher) {
+        pusher.devices({}, (error, response) => {
+          debugger;
+          const device = response.devices.find(
+            d => d.nickname === config.pushbullet.deviceName
+          );
+          pusher.note(
+            device.iden,
+            `gitlab-cd: ${pipeline.project.name}`,
+            "Deployment complete"
+          );
+        });
+      }
+    });
 });
 
 app.listen(config.port);
